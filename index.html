@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jejak Diri - Pelacak Pengembangan Diri</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- UPDATE: Menggunakan Supabase JS v2 Terbaru yang mendukung Publishable Key (sb_publishable_...) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
   <script>
     tailwind.config = {
@@ -30,8 +29,8 @@
     <div class="flex items-center gap-3">
       <button onclick="toggleSidebar()" class="text-xl p-1 focus:outline-none"><i class="fa-solid fa-bars"></i></button>
       <div>
-        <h1 class="text-lg font-bold leading-none" id="header-title">Dasbor</h1>
-        <p class="text-xs text-slate-400 mt-1" id="header-date">Rekap September 2026</p>
+        <h1 class="text-lg font-bold leading-none" id="header-title">Dasbor Utama</h1>
+        <p class="text-xs text-slate-400 mt-1" id="header-date">Rekap Realtime</p>
       </div>
     </div>
     <button onclick="toggleDarkMode()" class="text-lg p-2 focus:outline-none"><i class="fa-solid fa-moon"></i></button>
@@ -62,70 +61,140 @@
 
   <!-- Area Konten Utama -->
   <main class="p-4 max-w-md mx-auto space-y-4" id="main-content">
-    <!-- View Dasbor -->
+    
+    <!-- VIEW DASBOR -->
     <div id="view-dasbor" class="tab-view space-y-4">
+      
+      <!-- Filter Akumulasi Periode -->
       <section class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
-        <h3 class="font-semibold text-slate-200">Lihat Riwayat Bulan</h3>
-        <p class="text-xs text-slate-400">Bandingkan pencapaianmu antar bulan dengan memilih periode di bawah.</p>
-        <div class="grid grid-cols-2 gap-2">
-          <select id="filter-bulan" onchange="loadDashboardData()" class="bg-slate-800 border border-slate-700 text-xs p-2.5 rounded-lg w-full">
-            <option value="01">Januari</option>
-            <option value="02">Februari</option>
-            <option value="03">Maret</option>
-            <option value="04">April</option>
-            <option value="05">Mei</option>
-            <option value="06">Juni</option>
-            <option value="07">Juli</option>
-            <option value="08">Agustus</option>
-            <option value="09" selected>September</option>
-            <option value="10">Oktober</option>
-            <option value="11">November</option>
-            <option value="12">Desember</option>
+        <h3 class="font-semibold text-slate-200 text-sm">Pilih Akumulasi Tampilan</h3>
+        <div class="grid grid-cols-4 gap-1.5 text-xs">
+          <button id="btn-harian" onclick="setDashboardPeriod('harian')" class="period-btn bg-brand text-slate-900 font-bold py-2 rounded-lg">Harian</button>
+          <button id="btn-mingguan" onclick="setDashboardPeriod('mingguan')" class="period-btn bg-slate-800 text-slate-300 py-2 rounded-lg">Mingguan</button>
+          <button id="btn-bulanan" onclick="setDashboardPeriod('bulanan')" class="period-btn bg-slate-800 text-slate-300 py-2 rounded-lg">Bulanan</button>
+          <button id="btn-tahunan" onclick="setDashboardPeriod('tahunan')" class="period-btn bg-slate-800 text-slate-300 py-2 rounded-lg">Tahunan</button>
+        </div>
+
+        <div id="month-picker-container" class="hidden pt-2 border-t border-slate-800 grid grid-cols-2 gap-2">
+          <select id="filter-bulan" onchange="loadDashboardData()" class="bg-slate-800 border border-slate-700 text-xs p-2 rounded-lg">
+            <option value="0">Januari</option>
+            <option value="1">Februari</option>
+            <option value="2">Maret</option>
+            <option value="3">April</option>
+            <option value="4">Mei</option>
+            <option value="5">Juni</option>
+            <option value="6">Juli</option>
+            <option value="7">Agustus</option>
+            <option value="8" selected>September</option>
+            <option value="9">Oktober</option>
+            <option value="10">November</option>
+            <option value="11">Desember</option>
           </select>
-          <select id="filter-tahun" onchange="loadDashboardData()" class="bg-slate-800 border border-slate-700 text-xs p-2.5 rounded-lg w-full">
+          <select id="filter-tahun" onchange="loadDashboardData()" class="bg-slate-800 border border-slate-700 text-xs p-2 rounded-lg">
             <option value="2026" selected>2026</option>
             <option value="2027">2027</option>
           </select>
         </div>
       </section>
 
+      <!-- Entri Cepat Harian -->
       <section class="space-y-2">
-        <h4 class="text-xs text-slate-400 font-medium">Entri Cepat Harian</h4>
+        <h4 class="text-xs text-slate-400 font-medium">Entri Cepat Aktivitas</h4>
         <div class="grid grid-cols-3 gap-2 text-xs">
-          <button onclick="switchTab('olahraga')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Olahraga</button>
-          <button onclick="switchTab('napas')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Olah Napas</button>
-          <button onclick="switchTab('pikir')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Olah Pikir</button>
-          <button onclick="switchTab('jiwa')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Olah Jiwa</button>
-          <button onclick="switchTab('finansial')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Finansial</button>
-          <button onclick="switchTab('nafsu')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Olah Nafsu</button>
-          <button onclick="switchTab('jurnal')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Jurnal</button>
-          <button onclick="switchTab('galeri')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Galeri</button>
-          <button onclick="switchTab('kalender')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left">+ Kejadian</button>
+          <button onclick="switchTab('olahraga')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Olahraga</button>
+          <button onclick="switchTab('napas')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Napas</button>
+          <button onclick="switchTab('pikir')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Pikir</button>
+          <button onclick="switchTab('jiwa')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Jiwa</button>
+          <button onclick="switchTab('finansial')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Finansial</button>
+          <button onclick="switchTab('nafsu')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Nafsu</button>
+          <button onclick="switchTab('jurnal')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Jurnal</button>
+          <button onclick="switchTab('galeri')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Galeri</button>
+          <button onclick="switchTab('kalender')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Kejadian</button>
         </div>
       </section>
 
+      <!-- REKAP SEMUA KATEGORI -->
       <section class="space-y-3">
-        <div class="bg-darkcard p-4 rounded-xl border border-slate-800">
-          <p class="text-xs text-slate-400">Total Durasi Olahraga Bulan Ini</p>
-          <h2 class="text-xl font-bold mt-1 text-amber-400" id="dash-olahraga">0 Menit</h2>
+        
+        <!-- Olahraga -->
+        <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-xs text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-bolt"></i> Olah Raga</h4>
+            <span class="text-[10px] text-slate-500" id="label-period-olahraga">Harian</span>
+          </div>
+          <div id="dash-olahraga-list" class="space-y-1 text-xs text-slate-300"></div>
         </div>
-        <div class="bg-darkcard p-4 rounded-xl border border-slate-800">
-          <p class="text-xs text-slate-400">Neraca Keuangan Bulanan</p>
-          <h2 class="text-xl font-bold mt-1 text-emerald-400" id="dash-neraca">Rp 0</h2>
+
+        <!-- Olah Napas -->
+        <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-xs text-cyan-400 flex items-center gap-1.5"><i class="fa-solid fa-wind"></i> Olah Napas</h4>
+            <span class="text-[10px] text-slate-500" id="label-period-napas">Harian</span>
+          </div>
+          <div id="dash-napas-list" class="space-y-1 text-xs text-slate-300"></div>
         </div>
-        <div class="bg-darkcard p-4 rounded-xl border border-slate-800">
-          <p class="text-xs text-slate-400">Aktivitas Ibadah Terorganisir</p>
-          <h2 class="text-xl font-bold mt-1 text-rose-400" id="dash-jiwa">0 Catatan</h2>
+
+        <!-- Olah Pikir -->
+        <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-xs text-purple-400 flex items-center gap-1.5"><i class="fa-solid fa-brain"></i> Olah Pikir</h4>
+            <span class="text-[10px] text-slate-500" id="label-period-pikir">Harian</span>
+          </div>
+          <div id="dash-pikir-list" class="space-y-1 text-xs text-slate-300"></div>
         </div>
+
+        <!-- Olah Jiwa -->
+        <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-xs text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-heart"></i> Olah Jiwa / Ibadah</h4>
+            <span class="text-[10px] text-slate-500" id="label-period-jiwa">Harian</span>
+          </div>
+          <div id="dash-jiwa-list" class="space-y-1 text-xs text-slate-300"></div>
+        </div>
+
+        <!-- Olah Nafsu -->
+        <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-xs text-indigo-400 flex items-center gap-1.5"><i class="fa-solid fa-sparkles"></i> Olah Nafsu</h4>
+            <span class="text-[10px] text-slate-500" id="label-period-nafsu">Harian</span>
+          </div>
+          <div id="dash-nafsu-list" class="space-y-1 text-xs text-slate-300"></div>
+        </div>
+
+        <!-- Olah Finansial -->
+        <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="font-bold text-xs text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-wallet"></i> Olah Finansial</h4>
+            <span class="text-[10px] text-slate-500" id="label-period-finansial">Harian</span>
+          </div>
+          <div id="dash-finansial-list" class="space-y-1 text-xs text-slate-300"></div>
+        </div>
+
+        <!-- Ringkasan Konten Lain -->
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          <div class="bg-darkcard p-3 rounded-xl border border-slate-800">
+            <p class="text-[10px] text-slate-400">Jurnal</p>
+            <p class="text-base font-bold text-blue-400 mt-1" id="dash-jurnal-count">0</p>
+          </div>
+          <div class="bg-darkcard p-3 rounded-xl border border-slate-800">
+            <p class="text-[10px] text-slate-400">Momen Foto</p>
+            <p class="text-base font-bold text-pink-400 mt-1" id="dash-galeri-count">0</p>
+          </div>
+          <div class="bg-darkcard p-3 rounded-xl border border-slate-800">
+            <p class="text-[10px] text-slate-400">Kejadian</p>
+            <p class="text-base font-bold text-teal-400 mt-1" id="dash-kalender-count">0</p>
+          </div>
+        </div>
+
       </section>
     </div>
 
-    <!-- View Generic Form Activity (Olahraga, Napas, Pikir, Jiwa, Nafsu) -->
+    <!-- VIEW ACTIVITY (Olahraga, Napas, Pikir, Jiwa, Nafsu) -->
     <div id="view-activity" class="tab-view hidden space-y-4">
       <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-slate-200" id="activity-title">Aktivitas</h3>
-          <button onclick="openAddItemModal()" class="text-xs bg-brand/20 text-brand px-3 py-1.5 rounded-lg font-medium border border-brand/30">+ Tambah Item Baru</button>
+          <button onclick="openAddItemModal()" class="text-xs bg-brand/20 text-brand px-3 py-1.5 rounded-lg font-medium border border-brand/30">+ Tambah Item</button>
         </div>
 
         <form id="form-activity" onsubmit="saveActivity(event)" class="space-y-3">
@@ -135,25 +204,25 @@
           </div>
           <div>
             <label class="text-xs text-slate-400">Nilai / Jumlah / Catatan</label>
-            <input type="text" id="activity-value" placeholder="Contoh: 30 / Selesai / Judul Buku" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
+            <input type="text" id="activity-value" placeholder="Contoh: 1 / 5 / Selesai" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
           </div>
           <button type="submit" class="w-full bg-brand text-slate-900 font-bold py-2.5 rounded-lg text-xs mt-2">Simpan Catatan</button>
         </form>
       </div>
 
-      <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
-        <h4 class="text-xs font-semibold text-slate-300">Riwayat Catatan Bulan Ini</h4>
-        <div id="activity-history" class="space-y-2 text-xs divide-y divide-slate-800"></div>
+      <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
+        <h4 class="text-xs font-semibold text-slate-300 border-b border-slate-800 pb-2">Riwayat Catatan</h4>
+        <div id="activity-history" class="space-y-4 text-xs"></div>
       </div>
     </div>
 
-    <!-- View Olah Finansial -->
+    <!-- VIEW FINANSIAL -->
     <div id="view-finansial" class="tab-view hidden space-y-4">
       <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
         <h3 class="font-bold text-slate-200">Catat Keuangan & Aset</h3>
         <form onsubmit="saveFinancial(event)" class="space-y-3">
           <div>
-            <label class="text-xs text-slate-400">Tipe Transaksi / Aset</label>
+            <label class="text-xs text-slate-400">Tipe Transaksi</label>
             <select id="fin-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1">
               <option value="pemasukan">Pemasukan Harian</option>
               <option value="pengeluaran">Pengeluaran Harian</option>
@@ -164,7 +233,7 @@
           </div>
           <div>
             <label class="text-xs text-slate-400">Nama Kategori / Catatan</label>
-            <input type="text" id="fin-name" placeholder="Contoh: SeaBank / BTC / Utang ke Andi" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
+            <input type="text" id="fin-name" placeholder="Contoh: SeaBank / BTC / Makan Siang" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
           </div>
           <div>
             <label class="text-xs text-slate-400">Nominal (Rp)</label>
@@ -175,12 +244,12 @@
       </div>
 
       <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-2">
-        <h4 class="text-xs font-semibold text-slate-300">Daftar Transaksi Keuangan</h4>
+        <h4 class="text-xs font-semibold text-slate-300 border-b border-slate-800 pb-2">Daftar Transaksi Keuangan</h4>
         <div id="fin-history" class="space-y-2 text-xs divide-y divide-slate-800"></div>
       </div>
     </div>
 
-    <!-- View Jurnal Harian -->
+    <!-- VIEW JURNAL -->
     <div id="view-jurnal" class="tab-view hidden space-y-4">
       <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
         <h3 class="font-bold text-slate-200">Tulis Jurnal Harian</h3>
@@ -190,26 +259,24 @@
           <button type="submit" class="w-full bg-blue-500 text-slate-900 font-bold py-2.5 rounded-lg text-xs">Simpan Jurnal</button>
         </form>
       </div>
-
       <div id="journal-history" class="space-y-3"></div>
     </div>
 
-    <!-- View Galeri Kenangan -->
+    <!-- VIEW GALERI -->
     <div id="view-galeri" class="tab-view hidden space-y-4">
       <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
         <h3 class="font-bold text-slate-200">Tambah Momen Kenangan</h3>
         <form onsubmit="saveMemory(event)" class="space-y-3">
           <input type="text" id="mem-title" placeholder="Judul Momen" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200" required>
-          <input type="url" id="mem-url" placeholder="URL Foto (Google Drive / Cloud Storage)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200" required>
+          <input type="url" id="mem-url" placeholder="URL Foto" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200" required>
           <textarea id="mem-desc" rows="2" placeholder="Deskripsi momen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200"></textarea>
           <button type="submit" class="w-full bg-pink-500 text-slate-900 font-bold py-2.5 rounded-lg text-xs">Simpan Momen</button>
         </form>
       </div>
-
       <div id="gallery-grid" class="grid grid-cols-1 gap-4"></div>
     </div>
 
-    <!-- View Kejadian Penting -->
+    <!-- VIEW KEJADIAN -->
     <div id="view-kalender" class="tab-view hidden space-y-4">
       <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
         <h3 class="font-bold text-slate-200">Catat Kejadian Penting</h3>
@@ -225,12 +292,12 @@
           <button type="submit" class="w-full bg-teal-500 text-slate-900 font-bold py-2.5 rounded-lg text-xs">Simpan Kejadian</button>
         </form>
       </div>
-
       <div id="events-list" class="space-y-2"></div>
     </div>
+
   </main>
 
-  <!-- Modal Tambah Item Baru Dinamis -->
+  <!-- MODAL TAMBAH ITEM KUSTOM -->
   <div id="modal-add-item" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-darkcard border border-slate-800 rounded-xl p-5 w-full max-w-sm space-y-4">
       <div class="flex justify-between items-center">
@@ -247,7 +314,29 @@
     </div>
   </div>
 
-  <!-- Bottom Navigation Menu -->
+  <!-- MODAL EDIT RECORD -->
+  <div id="modal-edit-item" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-darkcard border border-slate-800 rounded-xl p-5 w-full max-w-sm space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-sm text-slate-200">Edit Catatan Aktivitas</h3>
+        <button onclick="closeEditModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="submitEditActivity(event)" class="space-y-3">
+        <input type="hidden" id="edit-id">
+        <div>
+          <label class="text-xs text-slate-400">Nama Item</label>
+          <input type="text" id="edit-item-name" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-400 mt-1" readonly>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400">Nilai / Jumlah / Catatan Baru</label>
+          <input type="text" id="edit-value-text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
+        </div>
+        <button type="submit" class="w-full bg-brand text-slate-900 font-bold py-2.5 rounded-lg text-xs">Simpan Perubahan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- NAVIGASI BAWAH -->
   <nav class="fixed bottom-0 left-0 right-0 bg-darkcard/95 backdrop-blur border-t border-slate-800 px-4 py-2 flex justify-between items-center text-xs text-slate-400 z-30">
     <button onclick="switchTab('dasbor')" class="flex flex-col items-center gap-1 text-brand">
       <i class="fa-solid fa-border-all text-base"></i>
@@ -274,11 +363,10 @@
   <script>
     const SUPABASE_URL = "https://mlzpbbvtufjvkpyddqvz.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ZLSP5eeY-vb1jjQJENnfzw_3e9nBna5";
-    
-    // Inisialisasi Supabase SDK
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let currentCategory = 'olahraga';
+    let activePeriod = 'harian';
 
     const defaultItems = {
       olahraga: ['Jogging (menit)', 'Squat (kali)', 'Push-up (kali)', 'Pull-up (kali)', 'Shadow Boxing (menit)'],
@@ -298,23 +386,14 @@
     }
 
     function switchTab(tabName) {
-      if(!document.getElementById('sidebar-overlay').classList.contains('hidden')) {
-        toggleSidebar();
-      }
+      if(!document.getElementById('sidebar-overlay').classList.contains('hidden')) toggleSidebar();
 
       document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
 
       const titleMap = {
-        dasbor: 'Dasbor Utama',
-        olahraga: 'Olah Raga',
-        napas: 'Olah Napas',
-        pikir: 'Olah Pikir',
-        jiwa: 'Olah Jiwa',
-        finansial: 'Olah Finansial',
-        nafsu: 'Olah Nafsu',
-        jurnal: 'Jurnal Harian',
-        galeri: 'Galeri Kenangan',
-        kalender: 'Kejadian Penting'
+        dasbor: 'Dasbor Utama', olahraga: 'Olah Raga', napas: 'Olah Napas', pikir: 'Olah Pikir',
+        jiwa: 'Olah Jiwa', finansial: 'Olah Finansial', nafsu: 'Olah Nafsu',
+        jurnal: 'Jurnal Harian', galeri: 'Galeri Kenangan', kalender: 'Kejadian Penting'
       };
 
       document.getElementById('header-title').innerText = titleMap[tabName] || 'Jejak Diri';
@@ -335,25 +414,148 @@
       }
     }
 
+    function setDashboardPeriod(period) {
+      activePeriod = period;
+      document.querySelectorAll('.period-btn').forEach(b => {
+        b.classList.remove('bg-brand', 'text-slate-900', 'font-bold');
+        b.classList.add('bg-slate-800', 'text-slate-300');
+      });
+
+      const activeBtn = document.getElementById('btn-' + period);
+      activeBtn.classList.remove('bg-slate-800', 'text-slate-300');
+      activeBtn.classList.add('bg-brand', 'text-slate-900', 'font-bold');
+
+      const monthPicker = document.getElementById('month-picker-container');
+      if(period === 'bulanan') {
+        monthPicker.classList.remove('hidden');
+      } else {
+        monthPicker.classList.add('hidden');
+      }
+
+      loadDashboardData();
+    }
+
+    function getDateRange() {
+      const now = new Date();
+      let start, end;
+
+      if(activePeriod === 'harian') {
+        start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      } else if(activePeriod === 'mingguan') {
+        const day = now.getDay();
+        const diffToMonday = (day === 0 ? -6 : 1) - day; // Senin sebagai awal minggu
+        start = new Date(now);
+        start.setDate(now.getDate() + diffToMonday);
+        start.setHours(0, 0, 0, 0);
+
+        end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+      } else if(activePeriod === 'bulanan') {
+        const m = parseInt(document.getElementById('filter-bulan').value);
+        const y = parseInt(document.getElementById('filter-tahun').value);
+        start = new Date(y, m, 1, 0, 0, 0);
+        end = new Date(y, m + 1, 0, 23, 59, 59);
+      } else if(activePeriod === 'tahunan') {
+        const y = parseInt(document.getElementById('filter-tahun').value) || 2026;
+        start = new Date(y, 0, 1, 0, 0, 0);
+        end = new Date(y, 11, 31, 23, 59, 59);
+      }
+
+      return { start: start.toISOString(), end: end.toISOString() };
+    }
+
+    async function loadDashboardData() {
+      const labels = ['olahraga', 'napas', 'pikir', 'jiwa', 'nafsu', 'finansial'];
+      const textMap = { harian: 'Hari Ini', mingguan: 'Minggu Ini (Sen-Min)', bulanan: 'Bulan Ini', tahunan: 'Tahun 2026' };
+      labels.forEach(l => {
+        document.getElementById('label-period-' + l).innerText = textMap[activePeriod];
+      });
+
+      const { start, end } = getDateRange();
+
+      // Query Activity Logs
+      const { data: logs } = await _supabase.from('activity_logs')
+        .select('category, item_name, value_text, value_numeric')
+        .gte('created_at', start)
+        .lte('created_at', end);
+
+      const renderCategory = (catName, elementId) => {
+        const box = document.getElementById(elementId);
+        const filtered = logs ? logs.filter(row => row.category === catName) : [];
+
+        if(filtered.length === 0) {
+          box.innerHTML = '<p class="text-slate-500 font-normal">Belum ada aktivitas.</p>';
+          return;
+        }
+
+        const summary = {};
+        filtered.forEach(row => {
+          if(!summary[row.item_name]) summary[row.item_name] = 0;
+          summary[row.item_name] += (row.value_numeric || 1);
+        });
+
+        box.innerHTML = Object.entries(summary).map(([name, val]) => `
+          <div class="flex justify-between items-center bg-slate-800/40 px-2.5 py-1.5 rounded border border-slate-800">
+            <span>${name}</span>
+            <span class="font-bold text-brand">${val}</span>
+          </div>
+        `).join('');
+      };
+
+      renderCategory('olahraga', 'dash-olahraga-list');
+      renderCategory('napas', 'dash-napas-list');
+      renderCategory('pikir', 'dash-pikir-list');
+      renderCategory('jiwa', 'dash-jiwa-list');
+      renderCategory('nafsu', 'dash-nafsu-list');
+
+      // Query Finansial
+      const { data: fin } = await _supabase.from('financial_logs')
+        .select('type, category_name, amount')
+        .gte('created_at', start)
+        .lte('created_at', end);
+
+      const finBox = document.getElementById('dash-finansial-list');
+      if(fin && fin.length > 0) {
+        let pem = 0, peng = 0;
+        fin.forEach(f => {
+          if(f.type === 'pemasukan') pem += Number(f.amount);
+          if(f.type === 'pengeluaran') peng += Number(f.amount);
+        });
+        finBox.innerHTML = `
+          <div class="flex justify-between items-center bg-slate-800/40 px-2.5 py-1.5 rounded border border-slate-800">
+            <span>Pemasukan</span><span class="font-bold text-emerald-400">Rp ${pem.toLocaleString('id-ID')}</span>
+          </div>
+          <div class="flex justify-between items-center bg-slate-800/40 px-2.5 py-1.5 rounded border border-slate-800">
+            <span>Pengeluaran</span><span class="font-bold text-rose-400">Rp ${peng.toLocaleString('id-ID')}</span>
+          </div>
+        `;
+      } else {
+        finBox.innerHTML = '<p class="text-slate-500 font-normal">Belum ada transaksi.</p>';
+      }
+
+      // Query Total Jurnal, Galeri, Kejadian
+      const { count: jCount } = await _supabase.from('journals').select('id', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end);
+      const { count: gCount } = await _supabase.from('memories').select('id', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end);
+      const { count: kCount } = await _supabase.from('events').select('id', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end);
+
+      document.getElementById('dash-jurnal-count').innerText = jCount || 0;
+      document.getElementById('dash-galeri-count').innerText = gCount || 0;
+      document.getElementById('dash-kalender-count').innerText = kCount || 0;
+    }
+
     async function loadActivityOptions() {
       const select = document.getElementById('activity-item-select');
       select.innerHTML = '';
-      
       let items = [...(defaultItems[currentCategory] || [])];
-      
       try {
         const { data } = await _supabase.from('custom_items').select('item_name').eq('category', currentCategory);
-        if(data) {
-          data.forEach(row => items.push(row.item_name));
-        }
-      } catch (err) {
-        console.error("Gagal memuat item kustom:", err);
-      }
-
+        if(data) data.forEach(row => items.push(row.item_name));
+      } catch (err) {}
       items.forEach(item => {
         const opt = document.createElement('option');
-        opt.value = item;
-        opt.innerText = item;
+        opt.value = item; opt.innerText = item;
         select.appendChild(opt);
       });
     }
@@ -370,11 +572,7 @@
         value_numeric: parseFloat(val) || 0
       }]);
 
-      if (error) {
-        alert("Gagal menyimpan data: " + error.message);
-        return;
-      }
-
+      if (error) { alert("Gagal menyimpannya: " + error.message); return; }
       document.getElementById('activity-value').value = '';
       loadActivityHistory();
     }
@@ -383,49 +581,91 @@
       const historyBox = document.getElementById('activity-history');
       historyBox.innerHTML = '<p class="text-slate-500">Memuat data...</p>';
 
-      const { data, error } = await _supabase.from('activity_logs')
+      const { data } = await _supabase.from('activity_logs')
         .select('*')
         .eq('category', currentCategory)
         .order('created_at', { ascending: false });
-
-      if (error) {
-        historyBox.innerHTML = '<p class="text-rose-500">Gagal mengambil data.</p>';
-        return;
-      }
 
       if(!data || data.length === 0) {
         historyBox.innerHTML = '<p class="text-slate-500">Belum ada catatan.</p>';
         return;
       }
 
-      historyBox.innerHTML = data.map(item => `
-        <div class="pt-2 flex justify-between items-center">
-          <div>
-            <p class="font-medium text-slate-200">${item.item_name}</p>
-            <p class="text-[10px] text-slate-500">${new Date(item.created_at).toLocaleDateString('id-ID')}</p>
-          </div>
-          <span class="font-bold text-brand">${item.value_text}</span>
-        </div>
-      `).join('');
+      const grouped = {};
+      data.forEach(item => {
+        const dateStr = new Date(item.created_at).toLocaleDateString('id-ID', {
+          weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
+        });
+        if(!grouped[dateStr]) grouped[dateStr] = [];
+        grouped[dateStr].push(item);
+      });
+
+      let html = '';
+      for(const [dateLabel, items] of Object.entries(grouped)) {
+        html += `
+          <div class="bg-slate-800/40 border border-slate-800/80 rounded-lg p-3 space-y-2">
+            <div class="flex justify-between items-center border-b border-slate-700/60 pb-1.5">
+              <span class="font-bold text-slate-300 text-[11px]"><i class="fa-regular fa-calendar-check text-brand mr-1"></i> ${dateLabel}</span>
+            </div>
+            <div class="space-y-2 divide-y divide-slate-800/60">
+        `;
+
+        items.forEach(item => {
+          html += `
+            <div class="pt-1.5 flex justify-between items-center">
+              <div>
+                <p class="font-medium text-slate-200 text-xs">${item.item_name}</p>
+                <p class="text-[10px] font-bold text-brand mt-0.5">${item.value_text}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="openEditModal('${item.id}', '${item.item_name}', '${item.value_text}')" class="p-1.5 text-slate-400 hover:text-amber-400"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteActivity('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-400"><i class="fa-solid fa-trash-can"></i></button>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div></div>`;
+      }
+      historyBox.innerHTML = html;
     }
 
-    function openAddItemModal() {
-      document.getElementById('modal-add-item').classList.remove('hidden');
+    function openEditModal(id, itemName, valueText) {
+      document.getElementById('edit-id').value = id;
+      document.getElementById('edit-item-name').value = itemName;
+      document.getElementById('edit-value-text').value = valueText;
+      document.getElementById('modal-edit-item').classList.remove('hidden');
+    }
+    function closeEditModal() { document.getElementById('modal-edit-item').classList.add('hidden'); }
+
+    async function submitEditActivity(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-id').value;
+      const val = document.getElementById('edit-value-text').value;
+
+      await _supabase.from('activity_logs').update({
+        value_text: val,
+        value_numeric: parseFloat(val) || 0
+      }).eq('id', id);
+
+      closeEditModal();
+      loadActivityHistory();
     }
 
-    function closeAddItemModal() {
-      document.getElementById('modal-add-item').classList.add('hidden');
+    async function deleteActivity(id) {
+      if(!confirm("Yakin ingin menghapus data ini?")) return;
+      await _supabase.from('activity_logs').delete().eq('id', id);
+      loadActivityHistory();
     }
+
+    function openAddItemModal() { document.getElementById('modal-add-item').classList.remove('hidden'); }
+    function closeAddItemModal() { document.getElementById('modal-add-item').classList.add('hidden'); }
 
     async function saveCustomItem(e) {
       e.preventDefault();
-      const name = document.getElementById('custom-item-name').value;
-
       await _supabase.from('custom_items').insert([{
         category: currentCategory,
-        item_name: name
+        item_name: document.getElementById('custom-item-name').value
       }]);
-
       document.getElementById('custom-item-name').value = '';
       closeAddItemModal();
       loadActivityOptions();
@@ -433,17 +673,11 @@
 
     async function saveFinancial(e) {
       e.preventDefault();
-      const { error } = await _supabase.from('financial_logs').insert([{
+      await _supabase.from('financial_logs').insert([{
         type: document.getElementById('fin-type').value,
         category_name: document.getElementById('fin-name').value,
         amount: parseFloat(document.getElementById('fin-amount').value) || 0
       }]);
-
-      if (error) {
-        alert("Gagal menyimpan keuangan: " + error.message);
-        return;
-      }
-
       document.getElementById('fin-name').value = '';
       document.getElementById('fin-amount').value = '';
       loadFinancialData();
@@ -452,11 +686,7 @@
     async function loadFinancialData() {
       const box = document.getElementById('fin-history');
       const { data } = await _supabase.from('financial_logs').select('*').order('created_at', { ascending: false });
-      
-      if(!data || data.length === 0) {
-        box.innerHTML = '<p class="text-slate-500">Belum ada catatan transaksi.</p>';
-        return;
-      }
+      if(!data || data.length === 0) { box.innerHTML = '<p class="text-slate-500">Belum ada transaksi.</p>'; return; }
 
       box.innerHTML = data.map(i => `
         <div class="pt-2 flex justify-between items-center">
@@ -471,16 +701,10 @@
 
     async function saveJournal(e) {
       e.preventDefault();
-      const { error } = await _supabase.from('journals').insert([{
+      await _supabase.from('journals').insert([{
         title: document.getElementById('journal-title').value,
         content: document.getElementById('journal-content').value
       }]);
-
-      if (error) {
-        alert("Gagal menyimpan jurnal: " + error.message);
-        return;
-      }
-
       document.getElementById('journal-title').value = '';
       document.getElementById('journal-content').value = '';
       loadJournalData();
@@ -489,11 +713,7 @@
     async function loadJournalData() {
       const box = document.getElementById('journal-history');
       const { data } = await _supabase.from('journals').select('*').order('created_at', { ascending: false });
-
-      if(!data || data.length === 0) {
-        box.innerHTML = '<p class="text-slate-500 text-xs">Belum ada tulisan jurnal.</p>';
-        return;
-      }
+      if(!data || data.length === 0) { box.innerHTML = '<p class="text-slate-500 text-xs">Belum ada tulisan jurnal.</p>'; return; }
 
       box.innerHTML = data.map(j => `
         <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-1">
@@ -520,18 +740,14 @@
     async function loadGalleryData() {
       const grid = document.getElementById('gallery-grid');
       const { data } = await _supabase.from('memories').select('*').order('created_at', { ascending: false });
-
-      if(!data || data.length === 0) {
-        grid.innerHTML = '<p class="text-slate-500 text-xs">Belum ada foto kenangan.</p>';
-        return;
-      }
+      if(!data || data.length === 0) { grid.innerHTML = '<p class="text-slate-500 text-xs">Belum ada foto.</p>'; return; }
 
       grid.innerHTML = data.map(m => `
         <div class="bg-darkcard rounded-xl border border-slate-800 overflow-hidden">
           <img src="${m.image_url}" class="w-full h-40 object-cover" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Ditemukan'">
           <div class="p-3">
             <h4 class="font-bold text-xs text-slate-200">${m.title}</h4>
-            <p class="text-[10px] text-slate-500">${m.event_date ? new Date(m.event_date).toLocaleDateString('id-ID') : '-'}</p>
+            <p class="text-[10px] text-slate-500">${new Date(m.created_at).toLocaleDateString('id-ID')}</p>
             <p class="text-xs text-slate-400 mt-1">${m.description || ''}</p>
           </div>
         </div>
@@ -554,11 +770,7 @@
     async function loadEventsData() {
       const box = document.getElementById('events-list');
       const { data } = await _supabase.from('events').select('*').order('event_date', { ascending: true });
-
-      if(!data || data.length === 0) {
-        box.innerHTML = '<p class="text-slate-500 text-xs">Belum ada jadwal kejadian penting.</p>';
-        return;
-      }
+      if(!data || data.length === 0) { box.innerHTML = '<p class="text-slate-500 text-xs">Belum ada kejadian penting.</p>'; return; }
 
       box.innerHTML = data.map(ev => `
         <div class="bg-darkcard p-3 rounded-xl border border-slate-800 flex justify-between items-center">
@@ -570,25 +782,6 @@
           <span class="text-xs font-semibold text-slate-400">${new Date(ev.event_date).toLocaleDateString('id-ID')}</span>
         </div>
       `).join('');
-    }
-
-    async function loadDashboardData() {
-      const { data: fin } = await _supabase.from('financial_logs').select('amount');
-      if(fin) {
-        let total = fin.reduce((acc, curr) => acc + Number(curr.amount), 0);
-        document.getElementById('dash-neraca').innerText = "Rp " + total.toLocaleString('id-ID');
-      }
-
-      const { data: olg } = await _supabase.from('activity_logs').select('value_numeric').eq('category', 'olahraga');
-      if(olg) {
-        let total = olg.reduce((acc, curr) => acc + Number(curr.value_numeric || 0), 0);
-        document.getElementById('dash-olahraga').innerText = total + " Menit / Kali";
-      }
-
-      const { data: jw } = await _supabase.from('activity_logs').select('id').eq('category', 'jiwa');
-      if(jw) {
-        document.getElementById('dash-jiwa').innerText = jw.length + " Catatan";
-      }
     }
 
     window.onload = loadDashboardData;
