@@ -268,7 +268,7 @@
         <h3 class="font-bold text-slate-200">Tambah Momen Kenangan</h3>
         <form onsubmit="saveMemory(event)" class="space-y-3">
           <input type="text" id="mem-title" placeholder="Judul Momen" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200" required>
-          <input type="url" id="mem-url" placeholder="URL Foto" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200" required>
+          <input type="url" id="mem-url" placeholder="URL Foto (Drive / IMGBB / Dll)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200" required>
           <textarea id="mem-desc" rows="2" placeholder="Deskripsi momen..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200"></textarea>
           <button type="submit" class="w-full bg-pink-500 text-slate-900 font-bold py-2.5 rounded-lg text-xs">Simpan Momen</button>
         </form>
@@ -444,7 +444,7 @@
         end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
       } else if(activePeriod === 'mingguan') {
         const day = now.getDay();
-        const diffToMonday = (day === 0 ? -6 : 1) - day; // Senin sebagai awal minggu
+        const diffToMonday = (day === 0 ? -6 : 1) - day;
         start = new Date(now);
         start.setDate(now.getDate() + diffToMonday);
         start.setHours(0, 0, 0, 0);
@@ -475,7 +475,6 @@
 
       const { start, end } = getDateRange();
 
-      // Query Activity Logs
       const { data: logs } = await _supabase.from('activity_logs')
         .select('category, item_name, value_text, value_numeric')
         .gte('created_at', start)
@@ -510,7 +509,6 @@
       renderCategory('jiwa', 'dash-jiwa-list');
       renderCategory('nafsu', 'dash-nafsu-list');
 
-      // Query Finansial
       const { data: fin } = await _supabase.from('financial_logs')
         .select('type, category_name, amount')
         .gte('created_at', start)
@@ -535,7 +533,6 @@
         finBox.innerHTML = '<p class="text-slate-500 font-normal">Belum ada transaksi.</p>';
       }
 
-      // Query Total Jurnal, Galeri, Kejadian
       const { count: jCount } = await _supabase.from('journals').select('id', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end);
       const { count: gCount } = await _supabase.from('memories').select('id', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end);
       const { count: kCount } = await _supabase.from('events').select('id', { count: 'exact', head: true }).gte('created_at', start).lte('created_at', end);
@@ -724,6 +721,18 @@
       `).join('');
     }
 
+    // Penanganan Otomatis Link Google Drive / IMGBB
+    function formatImageUrl(url) {
+      if (!url) return '';
+      if (url.includes('drive.google.com')) {
+        const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          return `https://lh3.googleusercontent.com/d/${match[1]}`;
+        }
+      }
+      return url;
+    }
+
     async function saveMemory(e) {
       e.preventDefault();
       await _supabase.from('memories').insert([{
@@ -742,16 +751,20 @@
       const { data } = await _supabase.from('memories').select('*').order('created_at', { ascending: false });
       if(!data || data.length === 0) { grid.innerHTML = '<p class="text-slate-500 text-xs">Belum ada foto.</p>'; return; }
 
-      grid.innerHTML = data.map(m => `
+      grid.innerHTML = data.map(m => {
+        const formattedUrl = formatImageUrl(m.image_url);
+        return `
         <div class="bg-darkcard rounded-xl border border-slate-800 overflow-hidden">
-          <img src="${m.image_url}" class="w-full h-40 object-cover" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Ditemukan'">
+          <div class="w-full bg-black/40 flex items-center justify-center min-h-[200px]">
+            <img src="${formattedUrl}" class="w-full max-h-[400px] object-contain" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Ditemukan'">
+          </div>
           <div class="p-3">
             <h4 class="font-bold text-xs text-slate-200">${m.title}</h4>
             <p class="text-[10px] text-slate-500">${new Date(m.created_at).toLocaleDateString('id-ID')}</p>
             <p class="text-xs text-slate-400 mt-1">${m.description || ''}</p>
           </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
     async function saveEvent(e) {
