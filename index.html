@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jejak Diri - Pelacak Pengembangan Diri</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- UPDATE: Menggunakan Supabase JS v2 Terbaru yang mendukung Publishable Key (sb_publishable_...) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -273,6 +274,8 @@
   <script>
     const SUPABASE_URL = "https://mlzpbbvtufjvkpyddqvz.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ZLSP5eeY-vb1jjQJENnfzw_3e9nBna5";
+    
+    // Inisialisasi Supabase SDK
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let currentCategory = 'olahraga';
@@ -338,9 +341,13 @@
       
       let items = [...(defaultItems[currentCategory] || [])];
       
-      const { data } = await _supabase.from('custom_items').select('item_name').eq('category', currentCategory);
-      if(data) {
-        data.forEach(row => items.push(row.item_name));
+      try {
+        const { data } = await _supabase.from('custom_items').select('item_name').eq('category', currentCategory);
+        if(data) {
+          data.forEach(row => items.push(row.item_name));
+        }
+      } catch (err) {
+        console.error("Gagal memuat item kustom:", err);
       }
 
       items.forEach(item => {
@@ -356,12 +363,17 @@
       const item = document.getElementById('activity-item-select').value;
       const val = document.getElementById('activity-value').value;
 
-      await _supabase.from('activity_logs').insert([{
+      const { error } = await _supabase.from('activity_logs').insert([{
         category: currentCategory,
         item_name: item,
         value_text: val,
         value_numeric: parseFloat(val) || 0
       }]);
+
+      if (error) {
+        alert("Gagal menyimpan data: " + error.message);
+        return;
+      }
 
       document.getElementById('activity-value').value = '';
       loadActivityHistory();
@@ -371,10 +383,15 @@
       const historyBox = document.getElementById('activity-history');
       historyBox.innerHTML = '<p class="text-slate-500">Memuat data...</p>';
 
-      const { data } = await _supabase.from('activity_logs')
+      const { data, error } = await _supabase.from('activity_logs')
         .select('*')
         .eq('category', currentCategory)
         .order('created_at', { ascending: false });
+
+      if (error) {
+        historyBox.innerHTML = '<p class="text-rose-500">Gagal mengambil data.</p>';
+        return;
+      }
 
       if(!data || data.length === 0) {
         historyBox.innerHTML = '<p class="text-slate-500">Belum ada catatan.</p>';
@@ -416,11 +433,17 @@
 
     async function saveFinancial(e) {
       e.preventDefault();
-      await _supabase.from('financial_logs').insert([{
+      const { error } = await _supabase.from('financial_logs').insert([{
         type: document.getElementById('fin-type').value,
         category_name: document.getElementById('fin-name').value,
         amount: parseFloat(document.getElementById('fin-amount').value) || 0
       }]);
+
+      if (error) {
+        alert("Gagal menyimpan keuangan: " + error.message);
+        return;
+      }
+
       document.getElementById('fin-name').value = '';
       document.getElementById('fin-amount').value = '';
       loadFinancialData();
@@ -448,10 +471,16 @@
 
     async function saveJournal(e) {
       e.preventDefault();
-      await _supabase.from('journals').insert([{
+      const { error } = await _supabase.from('journals').insert([{
         title: document.getElementById('journal-title').value,
         content: document.getElementById('journal-content').value
       }]);
+
+      if (error) {
+        alert("Gagal menyimpan jurnal: " + error.message);
+        return;
+      }
+
       document.getElementById('journal-title').value = '';
       document.getElementById('journal-content').value = '';
       loadJournalData();
@@ -502,7 +531,7 @@
           <img src="${m.image_url}" class="w-full h-40 object-cover" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Ditemukan'">
           <div class="p-3">
             <h4 class="font-bold text-xs text-slate-200">${m.title}</h4>
-            <p class="text-[10px] text-slate-500">${new Date(m.event_date).toLocaleDateString('id-ID')}</p>
+            <p class="text-[10px] text-slate-500">${m.event_date ? new Date(m.event_date).toLocaleDateString('id-ID') : '-'}</p>
             <p class="text-xs text-slate-400 mt-1">${m.description || ''}</p>
           </div>
         </div>
