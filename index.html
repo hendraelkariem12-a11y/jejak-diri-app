@@ -113,6 +113,15 @@
         </div>
       </section>
 
+      <!-- GALERI FOTO DASBOR PERIODE INI -->
+      <section class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
+        <div class="flex justify-between items-center">
+          <h4 class="font-bold text-xs text-pink-400 flex items-center gap-1.5"><i class="fa-solid fa-image"></i> Galeri Foto Periode Ini</h4>
+          <span class="text-[10px] text-slate-500" id="label-period-galeri">Hari Ini</span>
+        </div>
+        <div id="dash-gallery-grid" class="grid grid-cols-1 gap-3"></div>
+      </section>
+
       <!-- REKAP SEMUA KATEGORI -->
       <section class="space-y-3">
         
@@ -467,13 +476,41 @@
     }
 
     async function loadDashboardData() {
-      const labels = ['olahraga', 'napas', 'pikir', 'jiwa', 'nafsu', 'finansial'];
+      const labels = ['olahraga', 'napas', 'pikir', 'jiwa', 'nafsu', 'finansial', 'galeri'];
       const textMap = { harian: 'Hari Ini', mingguan: 'Minggu Ini (Sen-Min)', bulanan: 'Bulan Ini', tahunan: 'Tahun 2026' };
       labels.forEach(l => {
-        document.getElementById('label-period-' + l).innerText = textMap[activePeriod];
+        const el = document.getElementById('label-period-' + l);
+        if(el) el.innerText = textMap[activePeriod];
       });
 
       const { start, end } = getDateRange();
+
+      // Load Foto Galeri Sesuai Periode
+      const dashGalleryGrid = document.getElementById('dash-gallery-grid');
+      const { data: dashMemories } = await _supabase.from('memories')
+        .select('*')
+        .gte('created_at', start)
+        .lte('created_at', end)
+        .order('created_at', { ascending: false });
+
+      if(!dashMemories || dashMemories.length === 0) {
+        dashGalleryGrid.innerHTML = '<p class="text-slate-500 text-xs">Tidak ada foto di periode ini.</p>';
+      } else {
+        dashGalleryGrid.innerHTML = dashMemories.map(m => {
+          const formattedUrl = formatImageUrl(m.image_url);
+          return `
+          <div class="bg-slate-900/60 rounded-xl border border-slate-800 overflow-hidden">
+            <div class="w-full bg-black/40 flex items-center justify-center min-h-[160px]">
+              <img src="${formattedUrl}" class="w-full max-h-[300px] object-contain" onerror="this.src='https://via.placeholder.com/400x200?text=Gambar+Tidak+Ditemukan'">
+            </div>
+            <div class="p-2.5">
+              <h5 class="font-bold text-xs text-slate-200">${m.title}</h5>
+              <p class="text-[9px] text-slate-500">${new Date(m.created_at).toLocaleDateString('id-ID')}</p>
+              ${m.description ? `<p class="text-[11px] text-slate-400 mt-1">${m.description}</p>` : ''}
+            </div>
+          </div>
+        `}).join('');
+      }
 
       const { data: logs } = await _supabase.from('activity_logs')
         .select('category, item_name, value_text, value_numeric')
