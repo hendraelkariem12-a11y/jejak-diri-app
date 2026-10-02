@@ -46,6 +46,7 @@
       </div>
       <nav class="space-y-1.5 text-sm">
         <button onclick="switchTab('dasbor')" class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-800 text-slate-300"><i class="fa-solid fa-border-all w-5 text-brand"></i> Dasbor</button>
+        <button onclick="switchTab('tantangan')" class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-800 text-slate-300"><i class="fa-solid fa-fire w-5 text-orange-500"></i> Tantangan 40 Hari</button>
         <button onclick="switchTab('olahraga')" class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-800 text-slate-300"><i class="fa-solid fa-bolt w-5 text-amber-500"></i> Olahraga</button>
         <button onclick="switchTab('napas')" class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-800 text-slate-300"><i class="fa-solid fa-wind w-5 text-cyan-400"></i> Olah Napas</button>
         <button onclick="switchTab('pikir')" class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-800 text-slate-300"><i class="fa-solid fa-brain w-5 text-purple-400"></i> Olah Pikir</button>
@@ -101,6 +102,7 @@
       <section class="space-y-2">
         <h4 class="text-xs text-slate-400 font-medium">Entri Cepat Aktivitas</h4>
         <div class="grid grid-cols-3 gap-2 text-xs">
+          <button onclick="switchTab('tantangan')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40 text-orange-400 font-semibold">+ Tantangan</button>
           <button onclick="switchTab('olahraga')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Olahraga</button>
           <button onclick="switchTab('napas')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Napas</button>
           <button onclick="switchTab('pikir')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Pikir</button>
@@ -109,7 +111,6 @@
           <button onclick="switchTab('nafsu')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Nafsu</button>
           <button onclick="switchTab('jurnal')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Jurnal</button>
           <button onclick="switchTab('galeri')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Galeri</button>
-          <button onclick="switchTab('kalender')" class="bg-darkcard border border-slate-800 p-2.5 rounded-lg text-slate-200 text-left hover:border-brand/40">+ Kejadian</button>
         </div>
       </section>
 
@@ -196,6 +197,27 @@
         </div>
 
       </section>
+    </div>
+
+    <!-- VIEW TANTANGAN 40 HARI -->
+    <div id="view-tantangan" class="tab-view hidden space-y-4">
+      <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
+        <h3 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-fire text-orange-500"></i> Buat Tantangan 40 Hari Baru
+        </h3>
+        <form onsubmit="saveChallenge(event)" class="space-y-3">
+          <div>
+            <label class="text-xs text-slate-400">Nama Kebiasaan / Tantangan</label>
+            <input type="text" id="challenge-title" placeholder="Contoh: Tanpa Bokep / Jogging 30 Menit" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
+          </div>
+          <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-900 font-bold py-2.5 rounded-lg text-xs transition">Mulai Tantangan</button>
+        </form>
+      </div>
+
+      <div class="space-y-3">
+        <h4 class="text-xs font-semibold text-slate-300 border-b border-slate-800 pb-2">Daftar Tantangan Aktif</h4>
+        <div id="challenge-list" class="space-y-3"></div>
+      </div>
     </div>
 
     <!-- VIEW ACTIVITY (Olahraga, Napas, Pikir, Jiwa, Nafsu) -->
@@ -351,6 +373,10 @@
       <i class="fa-solid fa-border-all text-base"></i>
       <span>Dasbor</span>
     </button>
+    <button onclick="switchTab('tantangan')" class="flex flex-col items-center gap-1">
+      <i class="fa-solid fa-fire text-base text-orange-500"></i>
+      <span>40 Hari</span>
+    </button>
     <button onclick="switchTab('olahraga')" class="flex flex-col items-center gap-1">
       <i class="fa-solid fa-heart-pulse text-base"></i>
       <span>Olahraga</span>
@@ -362,10 +388,6 @@
     <button onclick="switchTab('finansial')" class="flex flex-col items-center gap-1">
       <i class="fa-solid fa-wallet text-base"></i>
       <span>Finansial</span>
-    </button>
-    <button onclick="toggleSidebar()" class="flex flex-col items-center gap-1">
-      <i class="fa-solid fa-bars text-base"></i>
-      <span>Menu</span>
     </button>
   </nav>
 
@@ -400,7 +422,7 @@
       document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
 
       const titleMap = {
-        dasbor: 'Dasbor Utama', olahraga: 'Olah Raga', napas: 'Olah Napas', pikir: 'Olah Pikir',
+        dasbor: 'Dasbor Utama', tantangan: 'Tantangan 40 Hari', olahraga: 'Olah Raga', napas: 'Olah Napas', pikir: 'Olah Pikir',
         jiwa: 'Olah Jiwa', finansial: 'Olah Finansial', nafsu: 'Olah Nafsu',
         jurnal: 'Jurnal Harian', galeri: 'Galeri Kenangan', kalender: 'Kejadian Penting'
       };
@@ -416,6 +438,7 @@
       } else {
         document.getElementById('view-' + tabName).classList.remove('hidden');
         if(tabName === 'dasbor') loadDashboardData();
+        if(tabName === 'tantangan') loadChallengesData();
         if(tabName === 'finansial') loadFinancialData();
         if(tabName === 'jurnal') loadJournalData();
         if(tabName === 'galeri') loadGalleryData();
@@ -474,6 +497,115 @@
 
       return { start: start.toISOString(), end: end.toISOString() };
     }
+
+    /* --- LOGIKA FITUR TANTANGAN 40 HARI --- */
+    async function saveChallenge(e) {
+      e.preventDefault();
+      const title = document.getElementById('challenge-title').value;
+      const { error } = await _supabase.from('habit_challenges').insert([{
+        title: title,
+        current_streak: 0,
+        level: 1,
+        last_checked_date: null
+      }]);
+
+      if (error) { alert("Gagal menambah tantangan: " + error.message); return; }
+      document.getElementById('challenge-title').value = '';
+      loadChallengesData();
+    }
+
+    async function loadChallengesData() {
+      const box = document.getElementById('challenge-list');
+      box.innerHTML = '<p class="text-slate-500 text-xs">Memuat tantangan...</p>';
+
+      const { data, error } = await _supabase.from('habit_challenges').select('*').order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        box.innerHTML = '<p class="text-slate-500 text-xs">Belum ada tantangan 40 hari. Buat sekarang!</p>';
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      let html = '';
+      for (let ch of data) {
+        // Evaluasi Reset Otomatis jika bolos lebih dari 1 hari
+        if (ch.last_checked_date && ch.last_checked_date !== todayStr && ch.last_checked_date !== yesterdayStr && ch.current_streak > 0) {
+          ch.current_streak = 0;
+          await _supabase.from('habit_challenges').update({ current_streak: 0 }).eq('id', ch.id);
+        }
+
+        const isCheckedToday = ch.last_checked_date === todayStr;
+        const progressPercent = Math.min(100, Math.round((ch.current_streak / 40) * 100));
+
+        html += `
+          <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h5 class="font-bold text-xs text-slate-200">${ch.title}</h5>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-semibold">Level ${ch.level}</span>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">Hari ke-<b>${ch.current_streak}</b> dari 40 Hari Berturut-turut</p>
+              </div>
+              <button onclick="deleteChallenge('${ch.id}')" class="text-slate-500 hover:text-rose-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+            </div>
+
+            <!-- Action Button -->
+            <button onclick="checkInChallenge('${ch.id}', ${ch.current_streak}, ${ch.level}, '${ch.last_checked_date}')" 
+              ${isCheckedToday ? 'disabled' : ''}
+              class="w-full py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
+                isCheckedToday 
+                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                  : 'bg-orange-500 hover:bg-orange-600 text-slate-900'
+              }">
+              <i class="fa-solid ${isCheckedToday ? 'fa-circle-check' : 'fa-fire'}"></i>
+              ${isCheckedToday ? 'Lulus Hari Ini (Besok Ceklis Lagi)' : 'Ceklis Lulus Hari Ini'}
+            </button>
+          </div>
+        `;
+      }
+      box.innerHTML = html;
+    }
+
+    async function checkInChallenge(id, currentStreak, level, lastCheckedDate) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (lastCheckedDate === todayStr) return;
+
+      let newStreak = currentStreak + 1;
+      let newLevel = level;
+
+      // Jika lulus 40 Hari Berturut-turut -> Level Up & Reset Streak ke 0
+      if (newStreak >= 40) {
+        newStreak = 0;
+        newLevel += 1;
+        alert(`🎉 SELAMAT! Kamu berhasil menyelesaikan 40 Hari penuh tanpa jeda!\n\nLevel kamu NAIK ke Level ${newLevel}! Hitungan di-reset ke 0 untuk level berikutnya.`);
+      }
+
+      await _supabase.from('habit_challenges').update({
+        current_streak: newStreak,
+        level: newLevel,
+        last_checked_date: todayStr
+      }).eq('id', id);
+
+      loadChallengesData();
+    }
+
+    async function deleteChallenge(id) {
+      if(!confirm("Yakin ingin menghapus tantangan ini? All progress akan hilang.")) return;
+      await _supabase.from('habit_challenges').delete().eq('id', id);
+      loadChallengesData();
+    }
+
+    /* --- END LOGIKA FITUR TANTANGAN 40 HARI --- */
 
     async function loadDashboardData() {
       const labels = ['olahraga', 'napas', 'pikir', 'jiwa', 'nafsu', 'finansial', 'galeri'];
