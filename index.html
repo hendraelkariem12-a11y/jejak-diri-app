@@ -498,18 +498,30 @@
       return { start: start.toISOString(), end: end.toISOString() };
     }
 
-    /* --- LOGIKA FITUR TANTANGAN 40 HARI --- */
+    /* --- LOGIKA FITUR TANTANGAN 40 HARI (VERSI GRID CHECKBOX & BEBAS TAMBAH/KURANG) --- */
     async function saveChallenge(e) {
       e.preventDefault();
       const title = document.getElementById('challenge-title').value;
+      const initialCompletedDays = Array(40).fill(false);
+
       const { error } = await _supabase.from('habit_challenges').insert([{
         title: title,
         current_streak: 0,
         level: 1,
-        last_checked_date: null
+        last_checked_date: null,
+        completed_days: initialCompletedDays
       }]);
 
-      if (error) { alert("Gagal menambah tantangan: " + error.message); return; }
+      if (error) { 
+        const { error: err2 } = await _supabase.from('habit_challenges').insert([{
+          title: title,
+          current_streak: 0,
+          level: 1,
+          last_checked_date: null
+        }]);
+        if (err2) { alert("Gagal menambah tantangan: " + err2.message); return; }
+      }
+
       document.getElementById('challenge-title').value = '';
       loadChallengesData();
     }
@@ -525,21 +537,33 @@
         return;
       }
 
-      const todayStr = new Date().toISOString().split('T')[0];
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
-
       let html = '';
       for (let ch of data) {
-        // Evaluasi Reset Otomatis jika bolos lebih dari 1 hari
-        if (ch.last_checked_date && ch.last_checked_date !== todayStr && ch.last_checked_date !== yesterdayStr && ch.current_streak > 0) {
-          ch.current_streak = 0;
-          await _supabase.from('habit_challenges').update({ current_streak: 0 }).eq('id', ch.id);
+        let completedDays = ch.completed_days || [];
+        if (!Array.isArray(completedDays) || completedDays.length < 40) {
+          completedDays = Array(40).fill(false).map((v, i) => i < ch.current_streak);
         }
 
-        const isCheckedToday = ch.last_checked_date === todayStr;
-        const progressPercent = Math.min(100, Math.round((ch.current_streak / 40) * 100));
+        const totalDone = completedDays.filter(Boolean).length;
+        const progressPercent = Math.min(100, Math.round((totalDone / 40) * 100));
+
+        let gridBoxes = '';
+        for (let i = 0; i < 40; i++) {
+          const isChecked = completedDays[i];
+          gridBoxes += `
+            <button 
+              type="button"
+              onclick="toggleDayBox('${ch.id}', ${i})"
+              title="Hari ke-${i + 1}"
+              class="aspect-square flex flex-col items-center justify-center rounded-md border text-[10px] font-bold transition-all ${
+                isChecked 
+                  ? 'bg-orange-500 border-orange-400 text-slate-900 shadow-sm shadow-orange-500/30' 
+                  : 'bg-slate-800/80 border-slate-700/80 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+              }">
+              ${isChecked ? '<i class="fa-solid fa-check text-xs"></i>' : (i + 1)}
+            </button>
+          `;
+        }
 
         html += `
           <div class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
@@ -549,53 +573,96 @@
                   <h5 class="font-bold text-xs text-slate-200">${ch.title}</h5>
                   <span class="text-[10px] px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-semibold">Level ${ch.level}</span>
                 </div>
-                <p class="text-[10px] text-slate-400 mt-1">Hari ke-<b>${ch.current_streak}</b> dari 40 Hari Berturut-turut</p>
+                <p class="text-[10px] text-slate-400 mt-1">Terpenuhi: <b>${totalDone}</b> / 40 Hari</p>
               </div>
-              <button onclick="deleteChallenge('${ch.id}')" class="text-slate-500 hover:text-rose-400 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+              <div class="flex items-center gap-1">
+                <button onclick="adjustStreakManual('${ch.id}', -1)" title="Kurangi 1 Hari" class="p-1 text-slate-400 hover:text-orange-400 text-xs"><i class="fa-solid fa-minus border border-slate-700 rounded px-1.5 py-0.5"></i></button>
+                <button onclick="adjustStreakManual('${ch.id}', 1)" title="Tambah 1 Hari" class="p-1 text-slate-400 hover:text-orange-400 text-xs"><i class="fa-solid fa-plus border border-slate-700 rounded px-1.5 py-0.5"></i></button>
+                <button onclick="deleteChallenge('${ch.id}')" title="Hapus Tantangan" class="p-1 text-slate-500 hover:text-rose-400 text-xs ml-1"><i class="fa-solid fa-trash-can"></i></button>
+              </div>
             </div>
 
             <!-- Progress Bar -->
-            <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
-              <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div class="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
             </div>
 
-            <!-- Action Button -->
-            <button onclick="checkInChallenge('${ch.id}', ${ch.current_streak}, ${ch.level}, '${ch.last_checked_date}')" 
-              ${isCheckedToday ? 'disabled' : ''}
-              class="w-full py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 ${
-                isCheckedToday 
-                  ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-                  : 'bg-orange-500 hover:bg-orange-600 text-slate-900'
-              }">
-              <i class="fa-solid ${isCheckedToday ? 'fa-circle-check' : 'fa-fire'}"></i>
-              ${isCheckedToday ? 'Lulus Hari Ini (Besok Ceklis Lagi)' : 'Ceklis Lulus Hari Ini'}
-            </button>
+            <!-- Grid 40 Kotak -->
+            <div>
+              <p class="text-[10px] text-slate-400 mb-1.5 font-medium">Klik kotak untuk centang/batal:</p>
+              <div class="grid grid-cols-8 gap-1.5">
+                ${gridBoxes}
+              </div>
+            </div>
+
+            ${totalDone >= 40 ? `
+              <button onclick="levelUpChallenge('${ch.id}',${ch.level})" class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-slate-900 transition flex items-center justify-center gap-2 mt-2">
+                <i class="fa-solid fa-trophy"></i> Selamat! Klik untuk Naik Ke Level ${ch.level + 1}
+              </button>
+            ` : ''}
           </div>
         `;
       }
       box.innerHTML = html;
     }
 
-    async function checkInChallenge(id, currentStreak, level, lastCheckedDate) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      if (lastCheckedDate === todayStr) return;
+    async function toggleDayBox(id, dayIndex) {
+      const { data } = await _supabase.from('habit_challenges').select('*').eq('id', id).single();
+      if (!data) return;
 
-      let newStreak = currentStreak + 1;
-      let newLevel = level;
-
-      // Jika lulus 40 Hari Berturut-turut -> Level Up & Reset Streak ke 0
-      if (newStreak >= 40) {
-        newStreak = 0;
-        newLevel += 1;
-        alert(`🎉 SELAMAT! Kamu berhasil menyelesaikan 40 Hari penuh tanpa jeda!\n\nLevel kamu NAIK ke Level ${newLevel}! Hitungan di-reset ke 0 untuk level berikutnya.`);
+      let completedDays = data.completed_days || [];
+      if (!Array.isArray(completedDays) || completedDays.length < 40) {
+        completedDays = Array(40).fill(false).map((v, i) => i < data.current_streak);
       }
 
+      completedDays[dayIndex] = !completedDays[dayIndex];
+      const newStreak = completedDays.filter(Boolean).length;
+
       await _supabase.from('habit_challenges').update({
+        completed_days: completedDays,
         current_streak: newStreak,
-        level: newLevel,
-        last_checked_date: todayStr
+        last_checked_date: new Date().toISOString().split('T')[0]
       }).eq('id', id);
 
+      loadChallengesData();
+    }
+
+    async function adjustStreakManual(id, delta) {
+      const { data } = await _supabase.from('habit_challenges').select('*').eq('id', id).single();
+      if (!data) return;
+
+      let completedDays = data.completed_days || [];
+      if (!Array.isArray(completedDays) || completedDays.length < 40) {
+        completedDays = Array(40).fill(false).map((v, i) => i < data.current_streak);
+      }
+
+      if (delta > 0) {
+        const nextUnchecked = completedDays.findIndex(val => !val);
+        if (nextUnchecked !== -1) completedDays[nextUnchecked] = true;
+      } else if (delta < 0) {
+        const lastChecked = completedDays.map((val, idx) => val ? idx : -1).filter(idx => idx !== -1).pop();
+        if (lastChecked !== undefined) completedDays[lastChecked] = false;
+      }
+
+      const newStreak = completedDays.filter(Boolean).length;
+
+      await _supabase.from('habit_challenges').update({
+        completed_days: completedDays,
+        current_streak: newStreak
+      }).eq('id', id);
+
+      loadChallengesData();
+    }
+
+    async function levelUpChallenge(id, currentLevel) {
+      const newCompletedDays = Array(40).fill(false);
+      await _supabase.from('habit_challenges').update({
+        level: currentLevel + 1,
+        current_streak: 0,
+        completed_days: newCompletedDays
+      }).eq('id', id);
+
+      alert(`🎉 NAIK LEVEL! Selamat, kamu sekarang berada di Level ${currentLevel + 1}! Checklist di-reset ke 0.`);
       loadChallengesData();
     }
 
@@ -604,7 +671,6 @@
       await _supabase.from('habit_challenges').delete().eq('id', id);
       loadChallengesData();
     }
-
     /* --- END LOGIKA FITUR TANTANGAN 40 HARI --- */
 
     async function loadDashboardData() {
@@ -890,7 +956,6 @@
       `).join('');
     }
 
-    // Penanganan Otomatis Link Google Drive / IMGBB
     function formatImageUrl(url) {
       if (!url) return '';
       if (url.includes('drive.google.com')) {
