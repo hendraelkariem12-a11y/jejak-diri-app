@@ -66,6 +66,19 @@
     <!-- VIEW DASBOR -->
     <div id="view-dasbor" class="tab-view space-y-4">
       
+      <!-- SEKSI LENCANA / BADGES PENCAPAIAN -->
+      <section class="bg-gradient-to-r from-amber-950/40 via-darkcard to-slate-900 p-4 rounded-xl border border-amber-500/30 space-y-3">
+        <div class="flex justify-between items-center">
+          <h4 class="font-bold text-xs text-amber-400 flex items-center gap-2">
+            <i class="fa-solid fa-award text-amber-400 text-sm"></i> Koleksi Lencana Pencapaian
+          </h4>
+          <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 font-semibold" id="total-badge-count">0 Lencana</span>
+        </div>
+        <div id="dash-badges-container" class="grid grid-cols-2 gap-2 text-xs">
+          <!-- Lencana dimasukkan via JS -->
+        </div>
+      </section>
+
       <!-- Filter Akumulasi Periode -->
       <section class="bg-darkcard p-4 rounded-xl border border-slate-800 space-y-3">
         <h3 class="font-semibold text-slate-200 text-sm">Pilih Akumulasi Tampilan</h3>
@@ -208,7 +221,11 @@
         <form onsubmit="saveChallenge(event)" class="space-y-3">
           <div>
             <label class="text-xs text-slate-400">Nama Kebiasaan / Tantangan</label>
-            <input type="text" id="challenge-title" placeholder="Contoh: Tanpa Bokep / Jogging 30 Menit" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
+            <input type="text" id="challenge-title" placeholder="Contoh: Baca Al-Qur'an / Salat Dhuha" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1" required>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Nama Lencana Pencapaian (Gelar)</label>
+            <input type="text" id="challenge-badge-name" placeholder="Contoh: Reciter of Holy Quran (Kosongkan = disamakan)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 mt-1">
           </div>
           <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-slate-900 font-bold py-2.5 rounded-lg text-xs transition">Mulai Tantangan</button>
         </form>
@@ -498,14 +515,18 @@
       return { start: start.toISOString(), end: end.toISOString() };
     }
 
-    /* --- LOGIKA FITUR TANTANGAN 40 HARI (VERSI GRID CHECKBOX & BEBAS TAMBAH/KURANG) --- */
+    /* --- LOGIKA FITUR TANTANGAN 40 HARI & LENCANA --- */
     async function saveChallenge(e) {
       e.preventDefault();
       const title = document.getElementById('challenge-title').value;
+      let badgeName = document.getElementById('challenge-badge-name').value.trim();
+      if (!badgeName) badgeName = title;
+
       const initialCompletedDays = Array(40).fill(false);
 
       const { error } = await _supabase.from('habit_challenges').insert([{
         title: title,
+        badge_name: badgeName,
         current_streak: 0,
         level: 1,
         last_checked_date: null,
@@ -513,16 +534,12 @@
       }]);
 
       if (error) { 
-        const { error: err2 } = await _supabase.from('habit_challenges').insert([{
-          title: title,
-          current_streak: 0,
-          level: 1,
-          last_checked_date: null
-        }]);
-        if (err2) { alert("Gagal menambah tantangan: " + err2.message); return; }
+        alert("Gagal menambah tantangan: " + error.message); 
+        return; 
       }
 
       document.getElementById('challenge-title').value = '';
+      document.getElementById('challenge-badge-name').value = '';
       loadChallengesData();
     }
 
@@ -546,6 +563,7 @@
 
         const totalDone = completedDays.filter(Boolean).length;
         const progressPercent = Math.min(100, Math.round((totalDone / 40) * 100));
+        const badgeTitle = ch.badge_name || ch.title;
 
         let gridBoxes = '';
         for (let i = 0; i < 40; i++) {
@@ -573,6 +591,9 @@
                   <h5 class="font-bold text-xs text-slate-200">${ch.title}</h5>
                   <span class="text-[10px] px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 font-semibold">Level ${ch.level}</span>
                 </div>
+                <p class="text-[10px] text-amber-400/90 mt-0.5 flex items-center gap-1 font-medium">
+                  <i class="fa-solid fa-award text-xs"></i> Lencana: ${badgeTitle} Level ${ch.level}
+                </p>
                 <p class="text-[10px] text-slate-400 mt-1">Terpenuhi: <b>${totalDone}</b> / 40 Hari</p>
               </div>
               <div class="flex items-center gap-1">
@@ -596,8 +617,8 @@
             </div>
 
             ${totalDone >= 40 ? `
-              <button onclick="levelUpChallenge('${ch.id}',${ch.level})" class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-slate-900 transition flex items-center justify-center gap-2 mt-2">
-                <i class="fa-solid fa-trophy"></i> Selamat! Klik untuk Naik Ke Level ${ch.level + 1}
+              <button onclick="levelUpChallenge('${ch.id}', ${ch.level}, '${badgeTitle.replace(/'/g, "\\'")}')" class="w-full py-2.5 px-3 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-900 transition flex items-center justify-center gap-2 mt-2 shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-trophy"></i> Klaim Lencana "${badgeTitle} Level${ch.level}" & Naik ke Level ${ch.level + 1}!
               </button>
             ` : ''}
           </div>
@@ -654,7 +675,7 @@
       loadChallengesData();
     }
 
-    async function levelUpChallenge(id, currentLevel) {
+    async function levelUpChallenge(id, currentLevel, badgeTitle) {
       const newCompletedDays = Array(40).fill(false);
       await _supabase.from('habit_challenges').update({
         level: currentLevel + 1,
@@ -662,18 +683,73 @@
         completed_days: newCompletedDays
       }).eq('id', id);
 
-      alert(`🎉 NAIK LEVEL! Selamat, kamu sekarang berada di Level ${currentLevel + 1}! Checklist di-reset ke 0.`);
+      alert(`🏆 SELAMAT! Kamu berhasil membuka Lencana "${badgeTitle} Level ${currentLevel}"!\n\nSekarang kamu berada di Level ${currentLevel + 1}. Progress 40 hari di-reset untuk level berikutnya.`);
       loadChallengesData();
+      loadDashboardData();
     }
 
     async function deleteChallenge(id) {
-      if(!confirm("Yakin ingin menghapus tantangan ini? All progress akan hilang.")) return;
+      if(!confirm("Yakin ingin menghapus tantangan ini? All progress dan lencana akan hilang.")) return;
       await _supabase.from('habit_challenges').delete().eq('id', id);
       loadChallengesData();
+      loadDashboardData();
     }
     /* --- END LOGIKA FITUR TANTANGAN 40 HARI --- */
 
     async function loadDashboardData() {
+      // 1. Load Lencana di Dasbor
+      const badgesContainer = document.getElementById('dash-badges-container');
+      const { data: challenges } = await _supabase.from('habit_challenges').select('*');
+
+      if (!challenges || challenges.length === 0) {
+        badgesContainer.innerHTML = '<p class="text-slate-500 text-xs col-span-2">Belum ada lencana yang terbuka. Mulai tantangan 40 hari!</p>';
+        document.getElementById('total-badge-count').innerText = '0 Lencana';
+      } else {
+        let totalBadges = 0;
+        let badgesHtml = '';
+
+        challenges.forEach(ch => {
+          const badgeTitle = ch.badge_name || ch.title;
+          const completedDays = ch.completed_days || [];
+          const currentDone = Array.isArray(completedDays) ? completedDays.filter(Boolean).length : ch.current_streak;
+          
+          // Lencana didapat jika level > 1 ATAU jika saat ini di level 1 dan sudah capai 40 hari
+          const earnedLevel = currentDone >= 40 ? ch.level : ch.level - 1;
+
+          if (earnedLevel > 0) {
+            totalBadges += earnedLevel;
+            badgesHtml += `
+              <div class="bg-slate-900/80 border border-amber-500/40 p-2.5 rounded-xl flex items-center gap-2.5 shadow-sm">
+                <div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-400 text-sm shrink-0">
+                  <i class="fa-solid fa-award"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <p class="font-bold text-slate-100 text-[11px] truncate" title="${badgeTitle}">${badgeTitle}</p>
+                  <p class="text-[9px] text-amber-400 font-semibold">Level ${earnedLevel}</p>
+                </div>
+              </div>
+            `;
+          } else {
+            // Tampilan lencana yang masih terkunci / progress berjalan
+            badgesHtml += `
+              <div class="bg-slate-900/40 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2.5 opacity-60">
+                <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 text-sm shrink-0">
+                  <i class="fa-solid fa-lock"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <p class="font-bold text-slate-300 text-[11px] truncate">${badgeTitle}</p>
+                  <p class="text-[9px] text-slate-500">${currentDone}/40 Hari</p>
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        document.getElementById('total-badge-count').innerText = `${totalBadges} Terbuka`;
+        badgesContainer.innerHTML = badgesHtml;
+      }
+
+      // 2. Load Rekap Aktivitas Periode
       const labels = ['olahraga', 'napas', 'pikir', 'jiwa', 'nafsu', 'finansial', 'galeri'];
       const textMap = { harian: 'Hari Ini', mingguan: 'Minggu Ini (Sen-Min)', bulanan: 'Bulan Ini', tahunan: 'Tahun 2026' };
       labels.forEach(l => {
@@ -683,7 +759,7 @@
 
       const { start, end } = getDateRange();
 
-      // Load Foto Galeri Sesuai Periode
+      // Load Foto Galeri
       const dashGalleryGrid = document.getElementById('dash-gallery-grid');
       const { data: dashMemories } = await _supabase.from('memories')
         .select('*')
